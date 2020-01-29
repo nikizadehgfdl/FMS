@@ -105,6 +105,12 @@ contains
        if ( lowercase(axis_cart) == 'y' ) cart = 'Y'
        if ( lowercase(axis_cart) == 'z' ) cart = 'Z'
        if ( lowercase(axis_cart) == 't' ) cart = 'T'
+    elseif(variable_att_exists(fileobj, axisname, "axis")) then
+       call get_variable_attribute(fileobj, axisname, "axis", axis_cart)
+       if ( lowercase(axis_cart) == 'x' ) cart = 'X'
+       if ( lowercase(axis_cart) == 'y' ) cart = 'Y'
+       if ( lowercase(axis_cart) == 'z' ) cart = 'Z'
+       if ( lowercase(axis_cart) == 't' ) cart = 'T'
     else
        cart = 'N'
     endif
