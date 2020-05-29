@@ -18,34 +18,7 @@
 !***********************************************************************
 
 MODULE diag_util_mod
-!#include <fms_platform.h>
-#define QUAD_KIND real128
-#define DOUBLE_KIND c_double
-#define FLOAT_KIND c_float
-#define LONG_KIND c_int64_t
-#define INT_KIND c_int32_t
-#define SHORT_KIND c_int16_t
-#define POINTER_KIND c_intptr_t
-#define _PURE pure
-#define _ALLOCATABLE allocatable
-#define _NULL
-#define _ALLOCATED allocated
-!DEC$ MESSAGE:'Using allocatable derived type array members.'
-
-
-!Control use of cray pointers.
-#define use_CRI_pointers
-!DEC$ MESSAGE:'Using cray pointers.'
-!If you want to use quad-precision.
-
-  ! <CONTACT EMAIL="seth.underwood@noaa.gov">
-  !   Seth Underwood
-  ! </CONTACT>
-
-  ! <OVERVIEW> <TT>diag_output_mod</TT> is an integral part of
-  !   <TT>diag_manager_mod</TT>. Its function is to write axis-meta-data,
-  !   field-meta-data and field data
-  ! </OVERVIEW>
+use platform_mod
 use,intrinsic :: iso_fortran_env, only: real128
 use,intrinsic :: iso_c_binding, only: c_double,c_float,c_int64_t, &
                                       c_int32_t,c_int16_t,c_intptr_t
@@ -1961,7 +1934,7 @@ CONTAINS
           fname = TRIM(filename)
           CALL get_mosaic_tile_file_ug(fname,filename,domainU)
     ENDIF
-    IF ( _ALLOCATED(files(file)%attributes) ) THEN
+    IF ( allocated(files(file)%attributes) ) THEN
        CALL diag_output_init(filename, files(file)%format, global_descriptor,&
             & files(file)%file_unit, all_scalar_or_1d, domain2, domainU,&
             & fileobj(file),fileobjU(file), fileobjND(file), fnum_for_domain(file),&
@@ -2522,7 +2495,7 @@ CONTAINS
     IF ( PRESENT(final_call_in) ) final_call = final_call_in
     static_write = .FALSE.
     IF ( PRESENT(static_write_in) ) static_write = static_write_in
-!> dif is the time as a real that is evaluated 
+!> dif is the time as a real that is evaluated
     dif = get_date_dif(time, base_time, files(file)%time_units)
 
     ! get file_unit, open new file and close curent file if necessary
@@ -2783,7 +2756,7 @@ CONTAINS
     IF ( PRESENT(err_msg) ) err_msg = ''
 
     ! Allocate memory for the attributes
-    IF ( .NOT._ALLOCATED(out_field%attributes) ) THEN
+    IF ( .NOT.allocated(out_field%attributes) ) THEN
        ALLOCATE(out_field%attributes(max_field_attributes), STAT=istat)
        IF ( istat.NE.0 ) THEN
           ! <ERROR STATUS="FATAL">
@@ -2928,7 +2901,7 @@ CONTAINS
     IF ( PRESENT(err_msg) ) err_msg = ''
 
     ! Allocate memory for the attributes
-    IF ( .NOT._ALLOCATED(out_file%attributes) ) THEN
+    IF ( .NOT.allocated(out_file%attributes) ) THEN
        ALLOCATE(out_file%attributes(max_field_attributes), STAT=istat)
        IF ( istat.NE.0 ) THEN
           ! <ERROR STATUS="FATAL">

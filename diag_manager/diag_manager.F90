@@ -18,7 +18,7 @@
 !***********************************************************************
 
 MODULE diag_manager_mod
-#include <fms_platform.h>
+use platform_mod
   ! <CONTACT EMAIL="Matthew.Harrison@gfdl.noaa.gov">
   !   Matt Harrison
   ! </CONTACT>
@@ -213,7 +213,7 @@ MODULE diag_manager_mod
        & file_exist, fms_error_handler, check_nml_error, get_mosaic_tile_file, lowercase
   USE fms_io_mod, ONLY: get_instance_filename
   USE diag_axis_mod, ONLY: diag_axis_init, get_axis_length, get_axis_num, get_domain2d, get_tile_count,&
-       & diag_axis_add_attribute, axis_compatible_check
+       & diag_axis_add_attribute, axis_compatible_check, CENTER, NORTH, EAST
   USE diag_util_mod, ONLY: get_subfield_size, log_diag_field_info, update_bounds,&
        & check_out_of_bounds, check_bounds_are_exact_dynamic, check_bounds_are_exact_static,&
        & diag_time_inc, find_input_field, init_input_field, init_output_field,&
@@ -255,6 +255,7 @@ MODULE diag_manager_mod
        & DIAG_MINUTES, DIAG_HOURS, DIAG_DAYS, DIAG_MONTHS, DIAG_YEARS, get_diag_global_att,&
        & set_diag_global_att, diag_field_add_attribute, diag_field_add_cell_measures,&
        & get_diag_field_id, diag_axis_add_attribute
+  PUBLIC :: CENTER, NORTH, EAST !< Used for diag_axis_init
   ! Public interfaces from diag_grid_mod
   PUBLIC :: diag_grid_init, diag_grid_end
   PUBLIC :: diag_manager_set_time_end, diag_send_complete
@@ -607,28 +608,52 @@ CONTAINS
        ! Verify that area and volume do not point to the same variable
        IF ( PRESENT(volume).AND.PRESENT(area) ) THEN
           IF ( area.EQ.volume ) THEN
-             CALL error_mesg ('diag_manager_mod::register_diag_field', 'module/output_field '&
+             IF (PRESENT(err_msg)) THEN
+                err_msg = 'diag_manager_mod::register_diag_field: module/output_field '&
+                  &//TRIM(module_name)//'/'// TRIM(field_name)//' AREA and VOLUME CANNOT be the same variable.&
+                  & Contact the developers.'
+                register_diag_field_array = -1
+                RETURN
+             ELSE 
+                CALL error_mesg ('diag_manager_mod::register_diag_field', 'module/output_field '&
                   &//TRIM(module_name)//'/'// TRIM(field_name)//' AREA and VOLUME CANNOT be the same variable.&
                   & Contact the developers.',&
                   & FATAL)
+             ENDIF
           END IF
        END IF
 
        ! Check for the existence of the area/volume field(s)
        IF ( PRESENT(area) ) THEN
           IF ( area < 0 ) THEN
-             CALL error_mesg ('diag_manager_mod::register_diag_field', 'module/output_field '&
+             IF (PRESENT(err_msg)) THEN
+                err_msg = 'diag_manager_mod::register_diag_field: module/output_field '&
+                  &//TRIM(module_name)//'/'// TRIM(field_name)//' AREA measures field NOT found in diag_table.&
+                  & Contact the model liaison.'
+                register_diag_field_array = -1
+                RETURN
+             ELSE 
+                CALL error_mesg ('diag_manager_mod::register_diag_field', 'module/output_field '&
                   &//TRIM(module_name)//'/'// TRIM(field_name)//' AREA measures field NOT found in diag_table.&
                   & Contact the model liaison.',&
                   & FATAL)
+             ENDIF
           END IF
        END IF
        IF ( PRESENT(volume) ) THEN
           IF ( volume < 0 ) THEN
-             CALL error_mesg ('diag_manager_mod::register_diag_field', 'module/output_field '&
+             IF (PRESENT(err_msg)) THEN
+                err_msg = 'diag_manager_mod::register_diag_field: module/output_field '&
+                  &//TRIM(module_name)//'/'// TRIM(field_name)//' VOLUME measures field NOT found in diag_table.&
+                  & Contact the model liaison.'
+                register_diag_field_array = -1
+                RETURN
+             ELSE 
+                CALL error_mesg ('diag_manager_mod::register_diag_field', 'module/output_field '&
                   &//TRIM(module_name)//'/'// TRIM(field_name)//' VOLUME measures field NOT found in diag_table.&
                   & Contact the model liaison.',&
                   & FATAL)
+             ENDIF
           END IF
        END IF
 
@@ -3796,8 +3821,8 @@ CONTAINS
 
     CHARACTER(len=*), PARAMETER :: SEP = '|'
 
-    INTEGER, PARAMETER :: FltKind = FLOAT_KIND
-    INTEGER, PARAMETER :: DblKind = DOUBLE_KIND
+    INTEGER, PARAMETER :: FltKind = R4_KIND
+    INTEGER, PARAMETER :: DblKind = R8_KIND
     INTEGER :: diag_subset_output
     INTEGER :: mystat
     INTEGER, ALLOCATABLE, DIMENSION(:) :: pelist
@@ -3831,7 +3856,7 @@ CONTAINS
        IF ( fms_error_handler('diag_manager_mod::diag_manager_init', 'unknown pack_size.  Must be 1, or 2.', err_msg) ) RETURN
     END IF
 
-    ! Get min and max values for real(kind=FLOAT_KIND)
+    ! Get min and max values for real(kind=R4_KIND)
     min_value = HUGE(0.0_FltKind)
     max_value = -min_value
 
@@ -3926,7 +3951,7 @@ CONTAINS
     ALLOCATE(fnum_for_domain(max_files))
     ALLOCATE(pelist(mpp_npes()))
     !> Initialize fnum_for_domain with "dn" which stands for done
-     fnum_for_domain(:) = "dn" 
+     fnum_for_domain(:) = "dn"
     CALL mpp_get_current_pelist(pelist, pelist_name)
 
     ! set the diag_init_time if time_init present.  Otherwise, set it to base_time

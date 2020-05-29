@@ -1,3 +1,22 @@
+#***********************************************************************
+#*                   GNU Lesser General Public License
+#*
+#* This file is part of the GFDL Flexible Modeling System (FMS).
+#*
+#* FMS is free software: you can redistribute it and/or modify it under
+#* the terms of the GNU Lesser General Public License as published by
+#* the Free Software Foundation, either version 3 of the License, or (at
+#* your option) any later version.
+#*
+#* FMS is distributed in the hope that it will be useful, but WITHOUT
+#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#* for more details.
+#*
+#* You should have received a copy of the GNU Lesser General Public
+#* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
 # ===========================================================================
 #
 # SYNOPSIS
@@ -17,7 +36,7 @@
 #
 # LICENSE
 #
-#   Copyright (c) 2019 Seth Underwood <underwoo@underwoo.io>
+#   Copyright (c) 2019,2020 Seth Underwood <underwoo@underwoo.io>
 #
 #   This program is free software; you can redistribute it and/or modify it
 #   under the terms of the GNU General Public License as published by the
@@ -57,7 +76,7 @@
 #     -qrealsize=8: IBM compiler
 AC_DEFUN([GX_FC_DEFAULT_REAL_KIND8_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran default REAL KIND 8 flag], [gx_cv_fc_default_real_kind8_flag],[
+AC_CACHE_CHECK([for Fortran flag needed to accept default REAL(KIND=8)], [gx_cv_fc_default_real_kind8_flag],[
 gx_cv_fc_default_real_kind8_flag=unknown
 gx_fc_default_real_kind8_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
@@ -113,7 +132,7 @@ AC_SUBST([FC_DEFAULT_REAL_KIND8_FLAG])
 #     -qrealsize=4: IBM compiler
 AC_DEFUN([GX_FC_DEFAULT_REAL_KIND4_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran default REAL KIND 4 flag], [gx_cv_fc_default_real_kind4_flag],[
+AC_CACHE_CHECK([for Fortran flag needed to accept default REAL(KIND=4)], [gx_cv_fc_default_real_kind4_flag],[
 gx_cv_fc_default_real_kind4_flag=unknown
 gx_fc_default_real_kind4_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
@@ -190,7 +209,7 @@ AC_LANG_POP([Fortran])
 #           none: IBM compiler (No option required for Cray Pointers)
 AC_DEFUN([GX_FC_CRAY_POINTER_FLAG],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([for Fortran Cray Pointer flag], [gx_cv_fc_cray_ptr_flag],[
+AC_CACHE_CHECK([for Fortran flag needed to accept Cray pointers], [gx_cv_fc_cray_ptr_flag],[
 gx_cv_fc_cray_ptr_flag=unknown
 gx_cray_ptr_flag_FCFLAGS_save=$FCFLAGS
 for ac_flag in none \
@@ -198,7 +217,6 @@ for ac_flag in none \
                '-Mcray=pointer'; do
   test "x$ac_flag" != xnone && FCFLAGS="$gx_cray_ptr_flag_FCFLAGS_save ${ac_flag}"
   AC_COMPILE_IFELSE([[      program test
-      integer(kind=8) :: ipt
       integer iarri(10)
       pointer (ipt, iarr)
       end program test]],
@@ -229,7 +247,7 @@ AC_SUBST([FC_CRAY_POINTER_FLAG])
 # an internal file.  If supported, sets the define HAVE_INTERNAL_NML.
 AC_DEFUN([GX_FC_INTERNAL_FILE_NML],[
 AC_LANG_PUSH([Fortran])
-AC_CACHE_CHECK([if Fortran supports reading namelist from internal files], [gx_cv_fc_internal_file_nml],[
+AC_CACHE_CHECK([if $[]_AC_FC[] supports reading namelists from internal files], [gx_cv_fc_internal_file_nml],[
 gx_cv_fc_internal_file_nml=unknown
 AC_COMPILE_IFELSE([[      program test
       implicit none

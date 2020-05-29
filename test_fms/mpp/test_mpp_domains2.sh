@@ -1,5 +1,24 @@
 #!/bin/sh
 
+#***********************************************************************
+#                   GNU Lesser General Public License
+#
+# This file is part of the GFDL Flexible Modeling System (FMS).
+#
+# FMS is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or (at
+# your option) any later version.
+#
+# FMS is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
+#***********************************************************************
+
 # This is part of the GFDL FMS package. This is a shell script to
 # execute tests in the test_fms/mpp directory.
 
@@ -17,7 +36,8 @@ then
 fi
 
 #echo "1: Test update nest domain"
-#sed "s/test_nest_domain = .false./test_nest_domain = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
+
+#sed "s/test_nest = .false./test_nest = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
 run_test test_mpp_domains 2 skip
 
 #echo "2:  Test Subset Update"
@@ -26,8 +46,8 @@ run_test test_mpp_domains 2 skip
 
 echo "3: Test Halosize Performance"
 sed "s/test_halosize_performance = .false./test_halosize_performance = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
-#If the system is Darwin it will be skipped because it fails 
-run_test test_mpp_domains 2 $is_darwin 
+#If the system is Darwin it will be skipped because it fails
+run_test test_mpp_domains 2 $is_darwin
 
 #echo "4: Test Edge Update"
 #sed "s/test_edge_update = .false./test_edge_update = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
@@ -39,13 +59,13 @@ run_test test_mpp_domains 2 skip
 
 echo "6: Test Performance"
 sed "s/test_performance = .false./test_performance = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
-#If the system is Darwin or TRAVIS it will be skipped because it fails 
+#If the system is Darwin or TRAVIS it will be skipped because it fails
 run_test test_mpp_domains 6 $is_darwin $is_travis
 
 echo "7: Test Global Sum"
 sed "s/test_global_sum = .false./test_global_sum = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
-#If the system is Darwin it will be skipped because it fails 
-run_test test_mpp_domains 2 $is_dawin 
+#If the system is Darwin it will be skipped because it fails
+run_test test_mpp_domains 2 $is_dawin
 
 echo "8: Test Cubic Grid Redistribute"
 sed "s/test_cubic_grid_redistribute = .false./test_cubic_grid_redistribute = .true./" $top_srcdir/test_fms/mpp/input_base.nml > input.nml
