@@ -1,22 +1,3 @@
-#***********************************************************************
-#*                   GNU Lesser General Public License
-#*
-#* This file is part of the GFDL Flexible Modeling System (FMS).
-#*
-#* FMS is free software: you can redistribute it and/or modify it under
-#* the terms of the GNU Lesser General Public License as published by
-#* the Free Software Foundation, either version 3 of the License, or (at
-#* your option) any later version.
-#*
-#* FMS is distributed in the hope that it will be useful, but WITHOUT
-#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#* FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#* for more details.
-#*
-#* You should have received a copy of the GNU Lesser General Public
-#* License along with FMS.  If not, see <http://www.gnu.org/licenses/>.
-#***********************************************************************
-
 # This is an automake file for the interpolator directory of the FMS
 # package.
 
@@ -31,8 +12,6 @@ AM_CPPFLAGS += -I${top_builddir}/horiz_interp
 AM_CPPFLAGS += -I${top_builddir}/time_manager
 AM_CPPFLAGS += -I${top_builddir}/time_interp
 AM_CPPFLAGS += -I${top_builddir}/constants
-AM_CPPFLAGS += -I${top_builddir}/fms2_io
-AM_CPPFLAGS += -I${top_builddir}/platform
 
 # Build this uninstalled convenience library.
 noinst_LTLIBRARIES = libinterpolator.la
@@ -41,7 +20,7 @@ noinst_LTLIBRARIES = libinterpolator.la
 libinterpolator_la_SOURCES = interpolator.F90
 
 # Mod file depends on its o file, is built and then installed.
-interpolator_mod.mod: interpolator.lo
+interpolator_mod.mod: interpolator.$(OBJEXT)
 BUILT_SOURCES = interpolator_mod.mod
 include_HEADERS = interpolator_mod.mod
 
