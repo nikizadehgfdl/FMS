@@ -1336,15 +1336,17 @@ end interface
 
  real :: xdat(ipts+1), ydat(jpts+1)
  real :: zdat(ipts,jpts)
- real :: zout2(size(zout,1),size(zout,2))
+ real :: zout2(size(zout,1)+1,size(zout,2)+1)
+ real :: zoutb(size(zout,1)+1,size(zout,2)+1)
  integer :: js, je
  type (horiz_interp_type) :: Interp
 
     call input_data ( topog_file, xdat, ydat, zdat )
     call find_indices ( minval(blat), maxval(blat), ydat, js, je )
 
-    call horiz_interp_new ( Interp, xdat, ydat(js:je+1), blon, blat )
-    call horiz_interp     ( Interp, zdat(:,js:je), zout )
+    call horiz_interp_new ( Interp, xdat, ydat(js:je+1), blon, blat, interp_method='bilinear')
+    call horiz_interp     ( Interp, zdat(:,js:je), zoutb)
+    zout=zoutb
 
 ! compute standard deviation if necessary
     if (present(flag)) then
