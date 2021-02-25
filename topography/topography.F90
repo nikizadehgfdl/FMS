@@ -48,7 +48,7 @@ use gaussian_topog_mod, only: gaussian_topog_init, get_gaussian_topog
 use   horiz_interp_mod, only: horiz_interp_type, horiz_interp_new, &
                               horiz_interp, horiz_interp_del
 
-use            fms_mod, only: check_nml_error, stdlog,    &
+use            fms_mod, only: check_nml_error, stdlog, lowercase,    &
                               mpp_pe, mpp_root_pe, write_version_number, &
                               error_mesg, FATAL, NOTE, &
                               mpp_error
@@ -98,10 +98,14 @@ end interface
 !   <DATA NAME="water_file" TYPE="character" DEFAULT="DATA/navy_pctwater.data">
 !       Name of percent water file.
 !   </DATA>
+!   <DATA NAME="interp_method" TYPE="character" DEFAULT="conservative">
+!       Interpolation method. "conservative" or "bilinear"
+!   </DATA>
 
    character(len=128) :: topog_file = 'DATA/navy_topography.data', &
                          water_file = 'DATA/navy_pctwater.data'
-   namelist /topography_nml/ topog_file, water_file, use_mpp_io
+   character(len=28)  :: interp_method = 'conservative'
+   namelist /topography_nml/ topog_file, water_file, use_mpp_io, interp_method
 ! </NAMELIST>
    integer, parameter    :: TOPOG_INDEX = 1
    integer, parameter    :: WATER_INDEX = 2
@@ -804,6 +808,8 @@ end interface
  real :: xdat(ipts+1), ydat(jpts+1)
  real :: zdat(ipts,jpts)
  real :: zout2(size(zout,1),size(zout,2))
+ real :: zout2b(size(zout,1)+1,size(zout,2)+1)
+ real :: zoutb(size(zout,1)+1,size(zout,2)+1)
  integer :: js, je
  type (horiz_interp_type) :: Interp
 
@@ -815,14 +821,24 @@ end interface
 
     call find_indices ( minval(blat), maxval(blat), ydat, js, je )
 
-    call horiz_interp_new ( Interp, xdat, ydat(js:je+1), blon, blat )
-    call horiz_interp     ( Interp, zdat(:,js:je), zout )
+    call horiz_interp_new ( Interp, xdat, ydat(js:je+1), blon, blat, interp_method=interp_method)
+    if (lowercase(trim(interp_method)) == 'bilinear') then
+       call horiz_interp     ( Interp, zdat(:,js:je), zoutb)
+       zout=zoutb
+    else
+       call horiz_interp     ( Interp, zdat(:,js:je), zout)
+    endif
 
 ! compute standard deviation if necessary
     if (present(flag)) then
        if (flag == COMPUTE_STDEV) then
            zdat = zdat*zdat
-           call horiz_interp ( Interp, zdat(:,js:je), zout2 )
+           if (lowercase(trim(interp_method)) == 'bilinear') then
+              call horiz_interp     ( Interp, zdat(:,js:je), zout2b)
+              zout2=zout2b
+           else
+              call horiz_interp     ( Interp, zdat(:,js:je), zout2)
+           endif
            zout = zout2 - zout*zout
            where (zout > 0.0)
              zout = sqrt ( zout )
