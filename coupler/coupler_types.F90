@@ -186,18 +186,24 @@ module coupler_types_mod
   ! coupler type.  There are duplicate values because different boundary
   ! conditions have different sub-elements.
   ! Note: These should be parameters, but doing so would break openMP directives.
+  !<The field_index for flux_type 'air_sea_gas_flux_generic' in Atm%fields%bc(n)%field(field_index) 
   integer, public :: ind_pcair = 1 !< The index of the atmospheric concentration
   integer, public :: ind_u10 = 2   !< The index of the 10 m wind speed
   integer, public :: ind_psurf = 3 !< The index of the surface atmospheric pressure
+  !<The field_index for flux_type 'air_sea_gas_flux_generic' in Ice%ocean_fields%bc(n)%field(field_index) calculated in OBGC packages
   integer, public :: ind_alpha = 1 !< The index of the solubility array for a tracer
   integer, public :: ind_csurf = 2 !< The index of the ocean surface concentration
   integer, public :: ind_sc_no = 3 !< The index for the Schmidt number for a tracer flux
+  !<The field_index for flux_type 'air_sea_gas_flux_generic' in Ice_boundary%fluxes%bc(n)%field(field_index) calculated in atmos_ocean_dep_fluxes_calc
   integer, public :: ind_flux = 1  !< The index for the tracer flux
   integer, public :: ind_deltap= 2 !< The index for ocean-air gas partial pressure change
   integer, public :: ind_kw = 3    !< The index for the piston velocity
-  integer, public :: ind_flux0 = 4 !< The index for the piston velocity
-  integer, public :: ind_deposition = 1 !< The index for the atmospheric deposition flux
-  integer, public :: ind_runoff = 1 !< The index for a runoff flux
+  integer, public :: ind_flux0 = 4 !< The index for the tracer flux with null atmosphere
+  
+  integer, public :: ind_deposition = 1 !< The field_index for depostion flux in Atm%fields%bc(n)%field(field_index)
+  integer, public :: ind_runoff = 1 !< The field_index for a runoff flux in Atm%fields%bc(n)%field(field_index)
+  integer, public :: ind_export_value_ice = 1 !< The field_index for flux_type 'export_value' in Ice%ocean_fields%bc(n)%field(field_index)
+  integer, public :: ind_export_value_atm = 1 !< The field_index for flux_type 'export_value' in Atm%fields%bc(n)%field(field_index)
 
   ! Interface definitions for overloaded routines
 

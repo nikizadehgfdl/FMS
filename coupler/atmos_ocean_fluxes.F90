@@ -45,6 +45,7 @@ module  atmos_ocean_fluxes_mod
   use coupler_types_mod, only: ind_deposition
   use coupler_types_mod, only: ind_runoff
   use coupler_types_mod, only: ind_flux, ind_deltap, ind_kw, ind_flux0
+  use coupler_types_mod, only: ind_export_value_atm, ind_export_value_ice
 
   use field_manager_mod, only: fm_path_name_len, fm_string_len, fm_exists, fm_get_index
   use field_manager_mod, only: fm_new_list, fm_get_current_list, fm_change_list
@@ -1197,6 +1198,9 @@ contains
     call fm_util_set_value('land_sea_runoff/flux/long_name', 'Concentration in land runoff', index = ind_flux)
     call fm_util_set_value('land_sea_runoff/flux/units',     'mol/m^3',                      index = ind_flux)
 
+    !Add the export_value type to be used for direct send of OCN values to ATM
+    call add_type_export_value
+
     ! Change back to root list.
     if (.not. fm_change_list('/')) then
       call mpp_error(FATAL, trim(error_header) // ' Could not change to "/"')
@@ -1217,4 +1221,68 @@ contains
     endif
     return
   end subroutine atmos_ocean_type_fluxes_init
+
+  subroutine add_type_export_value
+    !This type is meant to make a value on the OCN grid available on ATM grid without any flux treatment
+    !E.g., we want to make the concentration of a particular ocean tracer available on the ATM grid.
+
+    !use coupler_types_mod :: ind_export_value_atm,ind_export_value_ice
+    character(len=*), parameter :: sub_name = 'atmos_ocean_type_fluxes_init'
+    character(len=*), parameter :: caller_str =&
+        & trim(mod_name) // '(' // trim(sub_name) // ')'
+    character(len=*), parameter   :: error_header =&
+        & '==>Error from ' // trim(mod_name) // '(' // trim(sub_name) // '):'
+    
+    ! Define the export_value type and add it.
+    if (fm_new_list('export_value') .le. 0) then
+      call mpp_error(FATAL, trim(error_header) // ' Could not set the "export_value" list')
+    endif
+
+    ! Add the implementation list.
+    if (fm_new_list('export_value/implementation') .le. 0) then
+      call mpp_error(FATAL, trim(error_header) // ' Could not set the "export_value/implementation" list')
+    endif
+
+    ! Add the names of the different implementations.
+    if (fm_new_list('export_value/implementation/direct') .le. 0) then
+      call mpp_error(FATAL, trim(error_header) // ' Could not set the "export_value/implementation/direct" list')
+    endif
+    call fm_util_set_value('export_value/implementation/direct/num_parameters', 1)
+    ! Add some scalar quantaties.
+    call fm_util_set_value('export_value/num_flags', 0)
+    call fm_util_set_value('export_value/use_atm_pressure', .false.)
+    call fm_util_set_value('export_value/use_10m_wind_speed', .false.)
+    call fm_util_set_value('export_value/pass_through_ice', .true.)
+
+
+    ! Add required fields that will come from the atmosphere model.
+    if (fm_new_list('export_value/atm') .le. 0) then
+      call mpp_error(FATAL, trim(error_header) // ' Could not set the "export_value/atm" list')
+    endif
+
+    !The following index correspons to the one appearing in Atm%fields%bc(n)%field(ind_export_value_atm)%name
+    call fm_util_set_value('export_value/atm/name',      'export_value',        index = ind_export_value_atm)
+    call fm_util_set_value('export_value/atm/long_name', 'export_value to Atm', index = ind_export_value_atm)
+    call fm_util_set_value('export_value/atm/units',     'NA',                  index = ind_export_value_atm)
+
+    ! Add required fields that will come from the ice model.
+    if (fm_new_list('export_value/ice') .le. 0) then
+      call mpp_error(FATAL, trim(error_header) // ' Could not set the "export_value/ice" list')
+    endif
+    !The following index correspons to the one appearing in Ice%ocean_fields%bc(n)%field(ind_export_value_ice)%name
+    call fm_util_set_value('export_value/ice/name',      'export2atm', index = ind_export_value_ice)
+    call fm_util_set_value('export_value/ice/long_name', 'export2atm_long', index = ind_export_value_ice)
+    call fm_util_set_value('export_value/ice/units',     'NA', index = ind_export_value_ice)
+
+    ! Add the flux output field(s).
+    if (fm_new_list('export_value/flux') .le. 0) then
+      call mpp_error(FATAL, trim(error_header) // ' Could not set the "export_value/flux" list')
+    endif
+
+    call fm_util_set_value('export_value/flux/name',      'flux',               index = ind_flux)
+    call fm_util_set_value('export_value/flux/long_name', 'Surface export_value', index = ind_flux)
+    call fm_util_set_value('export_value/flux/units',     'NA',          index = ind_flux)
+
+  end subroutine add_type_export_value
+  
 end module  atmos_ocean_fluxes_mod
