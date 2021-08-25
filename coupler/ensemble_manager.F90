@@ -56,7 +56,6 @@ module ensemble_manager_mod
   integer :: ensemble_id = 1
   integer :: pe, total_npes_pm=0,ocean_npes_pm=0,atmos_npes_pm=0
   integer :: land_npes_pm=0,ice_npes_pm=0
-
   public :: ensemble_manager_init, get_ensemble_id, get_ensemble_size, get_ensemble_pelist
   public :: ensemble_pelist_setup
   public :: get_ensemble_filter_pelist
@@ -226,23 +225,24 @@ contains
     return
   end subroutine get_ensemble_filter_pelist
 
-!nnz: I think the following block of code should be contained in a subroutine
-!     to consolidate and ensure the consistency of declaring the various pelists.
 !> @brief Sets up pe list for an ensemble.
 !!
 !! @throw FATAL, "ensemble_manager_mod: land_npes > atmos_npes"
 !! @throw FATAL, "ensemble_manager_mod: ice_npes > atmos_npes"
   subroutine ensemble_pelist_setup(concurrent, atmos_npes, ocean_npes, land_npes, ice_npes, &
-                                   Atm_pelist, Ocean_pelist, Land_pelist, Ice_pelist)
+                                   Atm_pelist, Ocean_pelist, Land_pelist, Ice_pelist, ATM_first_in)
     logical, intent(in)                  :: concurrent
     integer, intent(in)                  :: atmos_npes, ocean_npes
     integer, intent(in)                  :: land_npes, ice_npes
     integer, dimension(:), intent(inout) :: Atm_pelist, Ocean_pelist
     integer, dimension(:), intent(inout) :: Land_pelist, Ice_pelist
+    logical, optional                    :: ATM_first_in !< if .true.  ATM pelist starts with rank 1,
+                                                         !< if .false. OCN pelist starts with rank 1  
     integer           :: atmos_pe_start, atmos_pe_end, ocean_pe_start, ocean_pe_end
     integer           :: land_pe_start, land_pe_end, ice_pe_start, ice_pe_end
     character(len=10) :: pelist_name, text
     integer           :: npes, n, m ,i
+    logical           :: ATM_first
 
     npes = total_npes_pm
 
@@ -256,13 +256,20 @@ contains
     allocate(ensemble_pelist_land (1:ensemble_size, 1:land_npes) )
     allocate(ensemble_pelist_ice  (1:ensemble_size, 1:ice_npes) )
 
+    ATM_first = .true.
+    if(present(ATM_first_in)) ATM_first = ATM_first_in
     atmos_pe_start = 0
     ocean_pe_start = 0
-    land_pe_start = 0
-    ice_pe_start = 0
     if( concurrent .OR. atmos_npes+ocean_npes == npes )then
-       ocean_pe_start = ensemble_size*atmos_npes
+       if(ATM_first) then
+         ocean_pe_start = ensemble_size*atmos_npes
+       else
+         atmos_pe_start = ensemble_size*ocean_npes
+       endif
     endif
+    land_pe_start = atmos_pe_start
+    ice_pe_start  = atmos_pe_start
+
     do n=1,ensemble_size
        atmos_pe_end = atmos_pe_start + atmos_npes - 1
        ocean_pe_end = ocean_pe_start + ocean_npes - 1
@@ -272,9 +279,15 @@ contains
        ensemble_pelist_ocean(n, 1:ocean_npes) = (/(i,i=ocean_pe_start,ocean_pe_end)/)
        ensemble_pelist_land (n, 1:land_npes) = (/(i,i=land_pe_start, land_pe_end)/)
        ensemble_pelist_ice  (n, 1:ice_npes) = (/(i,i=ice_pe_start,  ice_pe_end)/)
-       ensemble_pelist(n, 1:atmos_npes)       = ensemble_pelist_atmos(n, 1:atmos_npes)
-       if( concurrent .OR. atmos_npes+ocean_npes == npes ) &
-            ensemble_pelist(n, atmos_npes+1:npes)  = ensemble_pelist_ocean(n, 1:ocean_npes)
+       if(ATM_first) then
+         ensemble_pelist(n, 1:atmos_npes) = ensemble_pelist_atmos(n, 1:atmos_npes)
+         if( concurrent .OR. atmos_npes+ocean_npes == npes ) &
+           ensemble_pelist(n, atmos_npes+1:npes) = ensemble_pelist_ocean(n, 1:ocean_npes)
+       else
+         ensemble_pelist(n, 1:ocean_npes) = ensemble_pelist_ocean(n, 1:ocean_npes)
+         if( concurrent .OR. atmos_npes+ocean_npes == npes ) &
+           ensemble_pelist(n, ocean_npes+1:npes) = ensemble_pelist_atmos(n, 1:atmos_npes)
+       endif
        if(ANY(ensemble_pelist(n,:) == pe)) ensemble_id = n
        write(pelist_name,'(a,i2.2)')  '_ens',n
        call mpp_declare_pelist(ensemble_pelist(n,:), trim(pelist_name))
