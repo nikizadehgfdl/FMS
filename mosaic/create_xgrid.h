@@ -20,7 +20,7 @@
 #define CREATE_XGRID_H_
 
 #ifndef MAXXGRID
-#define MAXXGRID 1e6
+#define MAXXGRID 1e9
 #endif
 
 #define MV 50
